@@ -9,7 +9,7 @@ const AUDIT_LOGGER_ABI = parseAbi([
 ]);
 
 function getClients() {
-  const rpcUrl = process.env.BASE_RPC_URL;
+  const rpcUrl = process.env.RPC_URL;
   const privateKey = process.env.DEPLOYER_PRIVATE_KEY;
 
   if (!rpcUrl || !privateKey || privateKey.includes("your_funded")) {
@@ -43,7 +43,7 @@ export async function anchorDecision(params: {
   const clients = getClients();
 
   if (!clients || !contractAddress) {
-    console.warn("[anchor] Skipping — BASE_RPC_URL, DEPLOYER_PRIVATE_KEY, or AUDIT_LOGGER_ADDRESS not configured");
+    console.warn("[anchor] Skipping — RPC_URL, DEPLOYER_PRIVATE_KEY, or AUDIT_LOGGER_ADDRESS not configured");
     return null;
   }
 

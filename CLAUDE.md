@@ -47,7 +47,7 @@ All backend logic lives in route handler files — there is no separate server p
 
 Key lib modules:
 - **`src/lib/risk-engine.ts`** — pure function `scoreRisk(action)`. Hardcoded rules R1/R2/R3: notional > $100k → HIGH; elevated action types → +MEDIUM; whitelisted types + notional ≤ $10k → LOW (auto-approve). Thresholds and type sets are constants at the top of the file.
-- **`src/lib/anchor.ts`** — viem `walletClient.writeContract` → `AuditLogger.recordDecision`. Gracefully returns `null` if `BASE_RPC_URL`, `DEPLOYER_PRIVATE_KEY`, or `AUDIT_LOGGER_ADDRESS` are absent — the demo works without a funded wallet.
+- **`src/lib/anchor.ts`** — viem `walletClient.writeContract` → `AuditLogger.recordDecision`. Gracefully returns `null` if `RPC_URL`, `DEPLOYER_PRIVATE_KEY`, or `AUDIT_LOGGER_ADDRESS` are absent — the demo works without a funded wallet.
 - **`src/lib/hash.ts`** — `computeProposalHash` canonicalises the decision payload and keccak256s it; `computeReasonHash` does the same for rejection reasons. `toBytes32` pads a hex string to 32 bytes for Solidity.
 - **`src/lib/execution-grant.ts`** — issues an HS256 JWT (via `jose`) signed with `AGENTGATE_JWT_SECRET`.
 - **`src/lib/db.ts`** — Prisma client singleton with the standard Next.js dev hot-reload guard.
@@ -70,12 +70,12 @@ Pages go in `src/app/` (Next.js App Router). Shared types are in `src/lib/types.
 |---|---|---|
 | `DATABASE_URL` | Prisma (runtime + CLI) | Remote Postgres; in `.env.local` (Next) and `.env` (Prisma CLI) |
 | `AGENTGATE_JWT_SECRET` | `execution-grant.ts` | Signs execution grant JWTs |
-| `BASE_RPC_URL` | `anchor.ts`, `hardhat.config.ts` | Base Sepolia RPC endpoint |
+| `RPC_URL` | `anchor.ts`, `hardhat.config.ts` | Base Sepolia RPC endpoint |
 | `DEPLOYER_PRIVATE_KEY` | `anchor.ts`, `hardhat.config.ts` | Funded Base Sepolia wallet |
 | `AUDIT_LOGGER_ADDRESS` | `anchor.ts` | Set after `npm run contracts:deploy:base` |
 | `NEXT_PUBLIC_BASE_EXPLORER` | Frontend | Block explorer base URL |
 
-If `BASE_RPC_URL`, `DEPLOYER_PRIVATE_KEY`, or `AUDIT_LOGGER_ADDRESS` are missing/placeholder, `anchor.ts` skips the on-chain write and returns `null` — the API continues normally with `anchor_tx: null`.
+If `RPC_URL`, `DEPLOYER_PRIVATE_KEY`, or `AUDIT_LOGGER_ADDRESS` are missing/placeholder, `anchor.ts` skips the on-chain write and returns `null` — the API continues normally with `anchor_tx: null`.
 
 ## Demo paths
 

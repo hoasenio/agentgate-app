@@ -2,7 +2,7 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox-viem";
 
 const DEPLOYER_PRIVATE_KEY = process.env.DEPLOYER_PRIVATE_KEY ?? "";
-const BASE_RPC_URL = process.env.BASE_RPC_URL ?? "https://sepolia.base.org";
+const RPC_URL = process.env.RPC_URL ?? "https://sepolia.base.org";
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -14,7 +14,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: {},
     baseSepolia: {
-      url: BASE_RPC_URL,
+      url: RPC_URL,
       accounts: DEPLOYER_PRIVATE_KEY ? [DEPLOYER_PRIVATE_KEY] : [],
       chainId: 84532,
     },
