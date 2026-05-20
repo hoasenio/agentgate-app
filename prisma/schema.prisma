@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RiskLevel {
+  low
+  medium
+  high
+}
+
+enum DecisionStatus {
+  pending_approval
+  approved
+  rejected
+  auto_approved
+}
+
+model Decision {
+  id                String         @id @default(uuid())
+  orgId             String
+  agentId           String
+  action            Json
+  rationaleSummary  String
+  reasoningRef      Json?
+  riskLevel         RiskLevel
+  riskScore         Float
+  rulesHit          String[]
+  status            DecisionStatus
+  approvals         Json           @default("[]")
+  rejection         Json?
+  proposalHash      String
+  anchorTx          String?
+  rejectionAnchorTx String?
+  executionGrant    Json?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([orgId, createdAt(sort: Desc)])
+  @@index([agentId])
+  @@map("decisions")
+}
