@@ -16,7 +16,7 @@
     "contracts:install": "npm --prefix contracts install",
     "contracts:compile": "npm --prefix contracts run compile",
     "contracts:test": "npm --prefix contracts test",
-    "contracts:deploy:amoy": "npm --prefix contracts run deploy:amoy"
+    "contracts:deploy:base": "npm --prefix contracts run deploy:base"
   },
   "dependencies": {
     "@prisma/client": "^5.22.0",
