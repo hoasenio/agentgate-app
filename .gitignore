@@ -1,6 +1,10 @@
 # Dependencies
 node_modules
 
+# Next.js
+.next
+out
+
 # Build
 dist
 dist-ssr
@@ -18,3 +22,14 @@ dist-ssr
 
 # TypeScript
 *.tsbuildinfo
+
+# Prisma
+prisma/migrations/dev.db*
+
+# Hardhat / contracts
+contracts/node_modules
+contracts/cache
+contracts/artifacts
+contracts/typechain-types
+contracts/coverage
+contracts/coverage.json
