@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AgentDemoView from "./components/views/AgentDemoView";
 import RejectModal from "./components/RejectModal";
 import Sidebar from "./components/layout/Sidebar";
@@ -10,13 +10,21 @@ import OverrideLogView from "./components/views/OverrideLogView";
 import StatsView from "./components/views/StatsView";
 import TimelineView from "./components/views/TimelineView";
 import { REVIEWER_ADDR, SEED } from "./data/seed";
+import {
+  approveDecision,
+  listDecisions,
+  rejectDecision,
+} from "@/services/api/decisions";
+
+const ORG_ID = process.env.NEXT_PUBLIC_ORG_ID ?? "demo-dao";
 
 export default function ReviewerDashboard() {
-  const [decisions, setDecisions] = useState(SEED);
+  const [decisions, setDecisions] = useState([]);
   const [view, setView] = useState("timeline");
   const [selectedId, setSelectedId] = useState(null);
   const [rejectingId, setRejectingId] = useState(null);
   const [toast, setToast] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const selected = useMemo(() => decisions.find((d) => d.id === selectedId), [decisions, selectedId]);
   const rejecting = useMemo(() => decisions.find((d) => d.id === rejectingId), [decisions, rejectingId]);
@@ -31,51 +39,76 @@ export default function ReviewerDashboard() {
     setTimeout(() => setToast(null), 2600);
   }
 
+  async function refreshDecisions() {
+    const data = await listDecisions(ORG_ID);
+    setDecisions(data.decisions ?? []);
+  }
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function load() {
+      setIsLoading(true);
+      try {
+        const data = await listDecisions(ORG_ID);
+        if (!isMounted) return;
+        setDecisions(data.decisions ?? []);
+      } catch (error) {
+        if (!isMounted) return;
+        console.error("Failed to load decisions", error);
+        setDecisions(SEED);
+        showToast("API unavailable, showing demo data", "bad");
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+
+    load();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   function handleView(id) {
     setSelectedId(id);
     setView("detail");
   }
 
-  function handleApprove(id) {
-    setDecisions((all) =>
-      all.map((d) =>
-        d.id === id
-          ? {
-              ...d,
-              status: "approved",
-              approvals: [{ approver: REVIEWER_ADDR, timestamp: new Date().toISOString() }],
-              anchor_tx: "0xnew" + Math.random().toString(16).slice(2, 10) + "...approve",
-            }
-          : d
-      )
-    );
-    showToast("Approved · anchor tx submitted to Polygon", "good");
+  async function handleApprove(id) {
+    try {
+      const updated = await approveDecision(id, REVIEWER_ADDR);
+      setDecisions((all) => all.map((d) => (d.id === id ? updated : d)));
+      showToast("Approved · anchor tx submitted to Polygon", "good");
+    } catch (error) {
+      console.error("Approve failed", error);
+      showToast(error.message ?? "Approve failed", "bad");
+      await refreshDecisions();
+    }
   }
 
-  function handleConfirmReject(reason) {
+  async function handleConfirmReject(reason) {
     const id = rejectingId;
-    setDecisions((all) =>
-      all.map((d) =>
-        d.id === id
-          ? {
-              ...d,
-              status: "rejected",
-              rejection: {
-                rejected_by: REVIEWER_ADDR,
-                reason,
-                reason_hash: "0x" + Math.random().toString(16).slice(2, 6) + "..." + Math.random().toString(16).slice(2, 6),
-                timestamp: new Date().toISOString(),
-              },
-              anchor_tx: "0xnew" + Math.random().toString(16).slice(2, 10) + "...reject",
-            }
-          : d
-      )
-    );
-    setRejectingId(null);
-    showToast("Rejection recorded · reason anchored on-chain", "bad");
+    try {
+      const updated = await rejectDecision(id, reason, REVIEWER_ADDR);
+      setDecisions((all) => all.map((d) => (d.id === id ? updated : d)));
+      setRejectingId(null);
+      showToast("Rejection recorded · reason anchored on-chain", "bad");
+    } catch (error) {
+      console.error("Reject failed", error);
+      showToast(error.message ?? "Reject failed", "bad");
+      await refreshDecisions();
+    }
   }
 
   const body = (() => {
+    if (isLoading) {
+      return (
+        <div className="text-sm text-gray-500">
+          Loading decisions from API...
+        </div>
+      );
+    }
+
     if (view === "timeline") return <TimelineView decisions={decisions} onView={handleView} />;
     if (view === "detail" && selected) return (
       <DetailView

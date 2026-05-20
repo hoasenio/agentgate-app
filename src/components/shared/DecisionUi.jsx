@@ -18,6 +18,12 @@ export function RiskBadge({ level, score, withScore }) {
 }
 
 export function StatusBadge({ status }) {
+  const toSentenceCase = (value) => {
+    if (!value) return value;
+    const normalized = value.replaceAll("_", "-");
+    return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+  };
+
   if (status === "pending_approval") {
     return (
       <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-orange-100 text-orange-700">
@@ -25,34 +31,34 @@ export function StatusBadge({ status }) {
           <span className="absolute inset-0 rounded-full text-orange-400 ag-pulse-dot" />
           <span className="relative w-1.5 h-1.5 rounded-full bg-orange-500" />
         </span>
-        pending
+        Pending
       </span>
     );
   }
   if (status === "approved") {
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-green-100 text-green-700">
-        approved
+        Approved
       </span>
     );
   }
   if (status === "auto_approved") {
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-100 text-blue-700">
-        auto-approved
+        Auto-approved
       </span>
     );
   }
   if (status === "rejected") {
     return (
       <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-red-100 text-red-700">
-        rejected
+        Rejected
       </span>
     );
   }
   return (
     <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-gray-100 text-gray-700">
-      {status}
+      {toSentenceCase(status)}
     </span>
   );
 }

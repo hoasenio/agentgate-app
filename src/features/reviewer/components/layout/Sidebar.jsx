@@ -27,13 +27,15 @@ export default function Sidebar({ view, setView, counts }) {
               key={it.id}
               onClick={() => setView(it.id)}
               className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-colors ${
-                active ? "bg-blue-50 text-blue-600 font-medium" : "text-gray-700 hover:bg-white hover:text-gray-900"
+                active ? "bg-blue-50 text-blue-600 font-semibold" : "text-gray-700 hover:bg-white hover:text-gray-900"
               }`}
             >
-              <span className={active ? "text-blue-600" : "text-gray-400"}>{it.icon("w-4 h-4")}</span>
+              <span className={active ? "text-blue-600 font-semibold" : "text-gray-400"}>{it.icon("w-4 h-4")}</span>
               <span className="flex-1 text-left">{it.label}</span>
               {it.badge ? (
-                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${active ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-700"}`}>
+                <span
+                  className={`inline-flex h-5 min-w-5 aspect-square items-center justify-center rounded-full text-[10px] font-semibold ${active ? "bg-blue-100 text-blue-700" : "bg-gray-200 text-gray-700"}`}
+                >
                   {it.badge}
                 </span>
               ) : null}

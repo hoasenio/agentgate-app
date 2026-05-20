@@ -43,12 +43,18 @@ export default function TimelineView({ decisions, onView }) {
             <button
               key={f.id}
               onClick={() => setStatusFilter(f.id)}
-              className={`text-xs font-medium px-3 py-1.5 rounded-md transition-colors flex items-center gap-1.5 ${
-                statusFilter === f.id ? "bg-white text-gray-900 shadow-sm" : "text-gray-600 hover:text-gray-900"
+              className={`text-xs px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 ${
+                statusFilter === f.id
+                  ? "bg-white text-gray-900 shadow-sm ring-1 ring-blue-200 font-semibold"
+                  : "text-gray-600 hover:text-gray-900 font-medium"
               }`}
             >
               {f.label}
-              <span className={`text-[10px] font-semibold rounded-full px-1.5 ${statusFilter === f.id ? "bg-blue-50 text-blue-600" : "bg-gray-200 text-gray-600"}`}>{f.n}</span>
+              <span
+                className={`inline-flex h-5 min-w-5 aspect-square items-center justify-center rounded-full text-[10px] font-semibold ${statusFilter === f.id ? "bg-blue-50 text-blue-600" : "bg-gray-200 text-gray-600"}`}
+              >
+                {f.n}
+              </span>
             </button>
           ))}
         </div>
