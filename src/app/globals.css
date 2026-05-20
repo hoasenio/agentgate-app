@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  color: #111827;
+  background: #ffffff;
+}
+
+.font-mono,
+code,
+pre {
+  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+}
+
+.ag-pulse-dot::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: ag-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes ag-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0.4;
+  }
+}
+
+.ag-grid-bg {
+  background-image:
+    linear-gradient(to right, rgba(15, 23, 42, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 23, 42, 0.04) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: -1px -1px;
+}
+
+.ag-slide-up {
+  animation: ag-slide-up 0.25s ease-out both;
+}
+
+@keyframes ag-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ag-step-in {
+  animation: ag-step-in 250ms ease-out both;
+}
+
+@keyframes ag-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ag-header-in {
+  animation: ag-header-in 320ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes ag-header-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.ag-alarm {
+  animation: ag-alarm 400ms ease-out 1;
+}
+
+@keyframes ag-alarm {
+  0% {
+    background-color: rgba(254, 243, 199, 0);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+  35% {
+    background-color: rgba(254, 243, 199, 0.85);
+    box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.18);
+  }
+  100% {
+    background-color: rgba(254, 243, 199, 0);
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
+  }
+}
+
+.ag-fade {
+  animation: ag-fade 0.15s ease-out both;
+}
+
+@keyframes ag-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.ag-fade-out {
+  opacity: 0;
+  transition: opacity 300ms ease-out;
+}
+
+.ag-fade-in {
+  opacity: 1;
+  transition: opacity 300ms ease-out;
+}
