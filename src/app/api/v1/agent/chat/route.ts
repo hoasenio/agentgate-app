@@ -35,6 +35,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // 1a. If the agent refused (out-of-scope prompt), return without creating a decision.
+    //     This is a feature, not a failure — surfaces the agent's policy boundary.
+    if (llmResult.kind === "refusal") {
+      return NextResponse.json(
+        {
+          refused: true,
+          decision: null,
+          agent_message: llmResult.refusal_message,
+          langsmith_share_url: llmResult.langsmith_share_url,
+          model: llmResult.model,
+        },
+        { status: 200 }
+      );
+    }
+
     const { proposal, langsmith_run_id, langsmith_share_url, model } = llmResult;
 
     // 2. Run risk engine + persist decision (mirrors /decisions/propose pipeline)
@@ -87,6 +102,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(
       {
+        refused: false,
         decision: toApiDecision(finalRow),
         agent_message: buildAgentMessage(proposal, risk.level),
         langsmith_share_url,

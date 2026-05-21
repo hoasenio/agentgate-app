@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { RiskBadge, StatusBadge } from "@/components/shared/DecisionUi";
 import { sendAgentChat, getDecision } from "@/services/api/agent";
 import { getMe } from "@/services/api/me";
+import { getAnchorReceipt } from "@/services/api/chain";
 
 function shortAddr(addr) {
   if (!addr || addr.length < 10) return null;
@@ -158,6 +159,17 @@ export default function AgentChatPage() {
       });
       // Remove the thinking placeholder
       setMessages((m) => m.filter((x) => x.kind !== "thinking"));
+
+      if (result.refused) {
+        setMessages((m) => [
+          ...m,
+          { role: "agent", kind: "refusal", content: result.agent_message },
+        ]);
+        setShareUrl(result.langsmith_share_url);
+        setModel(result.model);
+        return;
+      }
+
       setMessages((m) => [
         ...m,
         { role: "agent", kind: "text", content: result.agent_message },
@@ -279,6 +291,7 @@ export default function AgentChatPage() {
             decision={activeDecision}
             shareUrl={shareUrl}
           />
+          <AnchoredCard decision={activeDecision} />
           <InstructionsPanel />
         </aside>
       </main>
@@ -311,6 +324,19 @@ function Bubble({ m }) {
       </div>
     );
   }
+  if (m.kind === "refusal") {
+    return (
+      <div className="flex justify-start ag-step-in">
+        <div className="max-w-[85%] bg-amber-50 border border-amber-200 text-amber-900 rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed">
+          <div className="flex items-center gap-1.5 mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-amber-700">
+            <span>🛡️</span>
+            <span>Out of scope · policy guardrail</span>
+          </div>
+          <div className="whitespace-pre-wrap">{m.content}</div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="flex justify-start ag-step-in">
       <div className="max-w-[85%] bg-gray-100 text-gray-900 rounded-2xl rounded-bl-sm px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap">
@@ -329,8 +355,6 @@ function DecisionStatusPanel({ decision, shareUrl }) {
       </div>
     );
   }
-  const baseExplorer =
-    process.env.NEXT_PUBLIC_BASE_EXPLORER ?? "https://testnet.snowtrace.io";
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
       <div className="flex items-center justify-between">
@@ -359,25 +383,15 @@ function DecisionStatusPanel({ decision, shareUrl }) {
           ⏳ Awaiting reviewer in the dashboard.
         </div>
       )}
-      {decision.anchor_tx && (
-        <a
-          href={`${baseExplorer}/tx/${decision.anchor_tx}`}
-          target="_blank"
-          rel="noreferrer"
-          className="block text-xs font-mono text-blue-600 hover:text-blue-700 break-all"
-        >
-          ↗ anchor: {decision.anchor_tx.slice(0, 18)}…
-        </a>
-      )}
       {decision.execution_grant?.token && (
         <details className="text-xs">
           <summary className="cursor-pointer text-blue-600 font-medium">View execution grant (JWT)</summary>
           <pre className="mt-2 bg-gray-900 text-green-400 rounded p-2 font-mono text-[10px] whitespace-pre-wrap break-all">{decision.execution_grant.token}</pre>
         </details>
       )}
-      {shareUrl && (
+      {(shareUrl || decision.reasoning_ref?.share_url) && (
         <a
-          href={shareUrl}
+          href={shareUrl ?? decision.reasoning_ref?.share_url}
           target="_blank"
           rel="noreferrer"
           className="block text-xs text-blue-600 hover:text-blue-700 font-medium"
@@ -385,6 +399,101 @@ function DecisionStatusPanel({ decision, shareUrl }) {
           ↗ View AI reasoning trace (LangSmith)
         </a>
       )}
+    </div>
+  );
+}
+
+function AnchoredCard({ decision }) {
+  const [receipt, setReceipt] = useState(null);
+  const [fetching, setFetching] = useState(false);
+  const baseExplorer =
+    process.env.NEXT_PUBLIC_BASE_EXPLORER ?? "https://testnet.snowtrace.io";
+
+  useEffect(() => {
+    if (!decision?.anchor_tx) {
+      setReceipt(null);
+      return;
+    }
+    setFetching(true);
+    let active = true;
+    getAnchorReceipt(decision.anchor_tx)
+      .then((r) => {
+        if (active) setReceipt(r);
+      })
+      .catch(() => {})
+      .finally(() => active && setFetching(false));
+    return () => {
+      active = false;
+    };
+  }, [decision?.anchor_tx]);
+
+  if (!decision?.anchor_tx) return null;
+
+  const tx = decision.anchor_tx;
+  const shortTx = `${tx.slice(0, 10)}…${tx.slice(-8)}`;
+  const gasUsed = receipt?.gas_used ? Number(receipt.gas_used).toLocaleString() : null;
+  const block = receipt?.block_number;
+  const age = receipt?.timestamp
+    ? Math.max(0, Math.floor(Date.now() / 1000 - receipt.timestamp))
+    : null;
+
+  return (
+    <div className="bg-gradient-to-br from-emerald-50 to-blue-50 border-2 border-emerald-200 rounded-xl p-4 space-y-3 ag-slide-up shadow-sm">
+      <div className="flex items-center gap-2">
+        <span className="text-lg">🔗</span>
+        <div>
+          <div className="text-[11px] font-mono uppercase tracking-wider text-emerald-700">Anchored on-chain</div>
+          <div className="text-sm font-bold text-emerald-900">Avalanche Fuji</div>
+        </div>
+        <div className="ml-auto">
+          {fetching && !receipt ? (
+            <span className="text-[10px] font-mono text-gray-500">confirming…</span>
+          ) : receipt?.status === "success" ? (
+            <span className="text-[10px] font-mono text-emerald-700 bg-emerald-100 border border-emerald-200 rounded px-1.5 py-0.5">
+              ✓ confirmed
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      <div>
+        <div className="text-[10px] font-mono uppercase tracking-wider text-gray-500 mb-0.5">tx hash</div>
+        <div className="font-mono text-xs text-gray-900 break-all bg-white/60 rounded px-2 py-1 border border-emerald-100">
+          {shortTx}
+        </div>
+      </div>
+
+      {(block || gasUsed || age !== null) && (
+        <div className="grid grid-cols-3 gap-2 text-center">
+          {block && (
+            <div className="bg-white/60 rounded px-2 py-1.5 border border-emerald-100">
+              <div className="text-[9px] font-mono uppercase tracking-wider text-gray-500">block</div>
+              <div className="text-xs font-mono font-semibold text-gray-900">#{block.toLocaleString()}</div>
+            </div>
+          )}
+          {gasUsed && (
+            <div className="bg-white/60 rounded px-2 py-1.5 border border-emerald-100">
+              <div className="text-[9px] font-mono uppercase tracking-wider text-gray-500">gas</div>
+              <div className="text-xs font-mono font-semibold text-gray-900">{gasUsed}</div>
+            </div>
+          )}
+          {age !== null && (
+            <div className="bg-white/60 rounded px-2 py-1.5 border border-emerald-100">
+              <div className="text-[9px] font-mono uppercase tracking-wider text-gray-500">age</div>
+              <div className="text-xs font-mono font-semibold text-gray-900">{age}s</div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <a
+        href={`${baseExplorer}/tx/${tx}`}
+        target="_blank"
+        rel="noreferrer"
+        className="block text-center bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-lg py-2.5 transition-colors"
+      >
+        View on Snowtrace ↗
+      </a>
     </div>
   );
 }

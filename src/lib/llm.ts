@@ -20,7 +20,13 @@ const ACTION_TYPES = [
 
 const SYSTEM_PROMPT = `You are an autonomous treasury operations agent for a DAO called "demo-dao". You receive natural-language instructions from a human operator and must convert them into a single structured action proposal that will be submitted to the AgentGate governance API for human review.
 
-You MUST call the propose_action tool with one structured action. NEVER respond with plain text. Choose the most appropriate action.type from this list:
+If the operator's request maps to a valid treasury or governance action, you MUST call the propose_action tool with one structured action.
+
+If the request is OUT OF SCOPE for a treasury agent (e.g. personal advice, off-topic chatter, anything that doesn't translate to an on-chain action), DO NOT call the tool. Instead respond in plain text with one short paragraph (2-3 sentences) explaining:
+1. That you can only act on treasury / governance operations for demo-dao
+2. What kinds of requests you CAN handle (give 2-3 concrete examples)
+
+Choose the most appropriate action.type from this list:
 - treasury.swap — swap one asset for another (HIGH if notional > $100k)
 - treasury.transfer — transfer assets to another address
 - treasury.claim — claim staking/yield rewards (typically LOW)
@@ -68,13 +74,22 @@ const PROPOSE_TOOL = {
   },
 };
 
-export interface AgentLLMResult {
-  proposal: ProposeInput;
-  langsmith_run_id: string | null;
-  langsmith_share_url: string | null;
-  model: string;
-  raw_assistant_text: string | null;
-}
+export type AgentLLMResult =
+  | {
+      kind: "action";
+      proposal: ProposeInput;
+      langsmith_run_id: string | null;
+      langsmith_share_url: string | null;
+      model: string;
+      raw_assistant_text: string | null;
+    }
+  | {
+      kind: "refusal";
+      refusal_message: string;
+      langsmith_run_id: string | null;
+      langsmith_share_url: string | null;
+      model: string;
+    };
 
 let _orClient: OpenRouter | null = null;
 function getOpenRouter(): OpenRouter {
@@ -102,12 +117,28 @@ function getLangSmith(): LangSmithClient | null {
   return _lsClient;
 }
 
+// Auto-enable LangSmith tracing whenever an API key is present.
+// Without this flag, `traceable()` becomes a no-op and run_ids are never captured.
+if (process.env.LANGSMITH_API_KEY) {
+  if (!process.env.LANGSMITH_TRACING) process.env.LANGSMITH_TRACING = "true";
+  if (!process.env.LANGCHAIN_TRACING_V2)
+    process.env.LANGCHAIN_TRACING_V2 = "true";
+}
+
+type LLMCallResult =
+  | {
+      kind: "action";
+      action: DecisionAction;
+      rationale: string;
+      raw_text: string | null;
+    }
+  | {
+      kind: "refusal";
+      message: string;
+    };
+
 const llmCall = traceable(
-  async (prompt: string): Promise<{
-    action: DecisionAction;
-    rationale: string;
-    raw_text: string | null;
-  }> => {
+  async (prompt: string): Promise<LLMCallResult> => {
     const openRouter = getOpenRouter();
     const response = await openRouter.chat.send({
       chatRequest: {
@@ -117,10 +148,7 @@ const llmCall = traceable(
           { role: "user", content: prompt },
         ],
         tools: [PROPOSE_TOOL],
-        toolChoice: {
-          type: "function",
-          function: { name: "propose_action" },
-        },
+        toolChoice: "auto",
         temperature: 0.3,
         maxTokens: 1024,
       },
@@ -130,21 +158,25 @@ const llmCall = traceable(
     const message = choice?.message;
     const toolCall = message?.toolCalls?.[0];
 
-    if (!toolCall || toolCall.function?.name !== "propose_action") {
-      throw new Error("LLM did not call propose_action tool");
+    if (toolCall && toolCall.function?.name === "propose_action") {
+      const args = JSON.parse(toolCall.function.arguments ?? "{}") as {
+        action_type: string;
+        params: Record<string, unknown>;
+        rationale_summary: string;
+      };
+      return {
+        kind: "action",
+        action: { type: args.action_type, params: args.params ?? {} },
+        rationale: args.rationale_summary,
+        raw_text: typeof message?.content === "string" ? message.content : null,
+      };
     }
 
-    const args = JSON.parse(toolCall.function.arguments ?? "{}") as {
-      action_type: string;
-      params: Record<string, unknown>;
-      rationale_summary: string;
-    };
-
-    return {
-      action: { type: args.action_type, params: args.params ?? {} },
-      rationale: args.rationale_summary,
-      raw_text: typeof message?.content === "string" ? message.content : null,
-    };
+    // No tool call → out-of-scope refusal. Surface the plain-text content.
+    const refusalText =
+      (typeof message?.content === "string" && message.content.trim()) ||
+      "I can only act on treasury operations or governance votes for demo-dao. Try something like: \"Claim our daily Lido staking rewards\" or \"Rebalance 5% of ETH into USDC.\"";
+    return { kind: "refusal", message: refusalText };
   },
   { name: "agentgate.agent.propose", project_name: process.env.LANGSMITH_PROJECT ?? "agentgate-demo" }
 );
@@ -166,7 +198,7 @@ export async function generateProposal(params: {
     { name: "agentgate.chat", project_name: process.env.LANGSMITH_PROJECT ?? "agentgate-demo" }
   );
 
-  const { action, rationale, raw_text } = await tracedWithCapture(params.prompt);
+  const result = await tracedWithCapture(params.prompt);
 
   // Try to make the run publicly shareable for the dashboard "View Trace" link
   let shareUrl: string | null = null;
@@ -175,9 +207,27 @@ export async function generateProposal(params: {
     try {
       shareUrl = await ls.shareRun(runId);
     } catch (e) {
-      console.warn("[llm] shareRun failed (non-fatal):", e);
+      console.warn("[llm] shareRun failed (non-fatal), using fallback URL:", e);
+    }
+    // Fallback: deep-link into the authenticated LangSmith UI. Works for the
+    // LangSmith account that owns the project; useful when shareRun is
+    // disabled (e.g. on free plans or with org-level sharing restrictions).
+    if (!shareUrl) {
+      shareUrl = `https://smith.langchain.com/runs/${runId}`;
     }
   }
+
+  if (result.kind === "refusal") {
+    return {
+      kind: "refusal",
+      refusal_message: result.message,
+      langsmith_run_id: runId,
+      langsmith_share_url: shareUrl,
+      model: DEFAULT_MODEL,
+    };
+  }
+
+  const { action, rationale, raw_text } = result;
 
   const proposal: ProposeInput = {
     agent_id: params.agent_id,
@@ -188,6 +238,7 @@ export async function generateProposal(params: {
   };
 
   return {
+    kind: "action",
     proposal,
     langsmith_run_id: runId,
     langsmith_share_url: shareUrl,

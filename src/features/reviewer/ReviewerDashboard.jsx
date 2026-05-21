@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import AgentDemoView from "./components/views/AgentDemoView";
 import RejectModal from "./components/RejectModal";
+import ChainStrip from "./components/layout/ChainStrip";
 import Sidebar from "./components/layout/Sidebar";
 import TopBar from "./components/layout/TopBar";
 import DetailView from "./components/views/DetailView";
@@ -141,6 +142,7 @@ export default function ReviewerDashboard() {
   return (
     <div className="h-screen flex flex-col bg-white" data-screen-label="Reviewer Dashboard">
       <TopBar />
+      <ChainStrip />
       <div className="flex flex-1 min-h-0">
         <Sidebar
           view={view === "detail" ? "timeline" : view}

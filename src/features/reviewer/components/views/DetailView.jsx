@@ -84,23 +84,38 @@ export default function DetailView({ decision, onBack, onReject, onApprove }) {
 
           {/* Rationale */}
           <Panel title="Rationale summary"
-            actions={d.reasoning_ref && (
+            actions={d.reasoning_ref?.run_id && (
               <a
-                href={`https://smith.langchain.com/o/demo/runs/${d.reasoning_ref.run_id}`}
+                href={
+                  d.reasoning_ref.share_url ??
+                  `https://smith.langchain.com/runs/${d.reasoning_ref.run_id}`
+                }
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700"
+                className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-md px-2.5 py-1 shadow-sm"
               >
-                View Trace (LangSmith) {DIcon.ext("w-3.5 h-3.5")}
+                View AI Trace (LangSmith) {DIcon.ext("w-3.5 h-3.5")}
               </a>
             )}
           >
             <p className="text-sm text-gray-700 leading-relaxed">{d.rationale_summary}</p>
             {d.reasoning_ref && (
               <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-mono text-gray-500">
-                <span>run_id: <span className="text-gray-700">{d.reasoning_ref.run_id}</span></span>
-                <span>·</span>
-                <span>hash: <span className="text-gray-700">{d.reasoning_ref.hash}</span></span>
+                {d.reasoning_ref.model && (
+                  <>
+                    <span>model: <span className="text-gray-700">{d.reasoning_ref.model}</span></span>
+                    <span>·</span>
+                  </>
+                )}
+                {d.reasoning_ref.run_id && (
+                  <span>run_id: <span className="text-gray-700">{d.reasoning_ref.run_id}</span></span>
+                )}
+                {d.reasoning_ref.hash && (
+                  <>
+                    <span>·</span>
+                    <span>hash: <span className="text-gray-700">{d.reasoning_ref.hash}</span></span>
+                  </>
+                )}
               </div>
             )}
           </Panel>

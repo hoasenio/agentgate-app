@@ -70,6 +70,28 @@ Maps to PRD §Hackathon Demo Script.
 
 ---
 
+## Out-of-Scope Guardrail Flow (LLM safety layer)
+
+**Why this exists:** treasury agents must refuse anything that isn't an on-chain action. AgentGate enforces this at *two* layers — the LLM's tool-use schema (can only emit valid action types) AND the downstream risk engine. This flow shows the first layer firing.
+
+1. **Agent tab.** In the free-type box, send something clearly off-topic. Examples:
+   - *"What's the weather in Paris?"*
+   - *"Write me a poem about Avalanche"*
+   - *"Help me with my homework"*
+   - *"What's your opinion on the SEC?"*
+2. Watch the bubble: instead of a proposal, you get an amber **🛡️ Out of scope · policy guardrail** card with a 2-sentence refusal authored by the agent explaining what it *can* handle.
+3. Check the dashboard — **no new decision row appears**. The refusal never reached the governance pipeline, no proposal hash was computed, no gas wasted on an anchor.
+
+**Pitch script for this beat:**
+
+> *"Let me show you the agent's policy boundary. Treasury agents shouldn't act on personal advice, off-topic queries, or anything outside their authorization scope. Watch — I'll ask it something out of scope…"*
+>
+> *(Type the off-topic prompt → guardrail bubble appears)*
+>
+> *"The agent refused. No proposal was created, nothing reached the reviewer, no on-chain anchor wasted. This is enforced at the tool-use layer — the LLM literally cannot return an action that isn't in our schema. Combined with the risk engine downstream, you have two independent layers of safety."*
+
+---
+
 ## Free-Type Prompts (for when judges want to see real LLM intelligence)
 
 These exercise the LLM's English → structured-action mapping:
