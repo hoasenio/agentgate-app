@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { JetBrains_Mono, Manrope } from "next/font/google";
 import type { ReactNode } from "react";
 import agentGateLogo from "@/assets/AgentGate-logo.png";
+import openGraphImage from "@/assets/opengraph.png";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -33,10 +34,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: agentGateLogo.src,
+        url: openGraphImage.src,
         width: 1024,
         height: 1024,
-        alt: "AgentGate logo",
+        alt: "AgentGate Open Graph image",
       },
     ],
   },
@@ -45,7 +46,7 @@ export const metadata: Metadata = {
     title: "AgentGate",
     description:
       "Privacy-preserving AI governance layer for autonomous agents.",
-    images: [agentGateLogo.src],
+    images: [openGraphImage.src],
   },
 };
 
