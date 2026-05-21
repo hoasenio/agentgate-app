@@ -54,10 +54,10 @@ const SCENARIOS = [
         title: "Anchored on-chain",
         body: (
           <>
-            <span className="font-mono">0x9f3a…c7d2</span> on Polygon Amoy
+            <span className="font-mono">0x9f3a…c7d2</span> on Avalanche Fuji
           </>
         ),
-        badge: { label: "PolygonScan ↗", cls: "bg-blue-100 text-blue-700" },
+        badge: { label: "Snowtrace ↗", cls: "bg-blue-100 text-blue-700" },
       },
     ],
   },
@@ -315,7 +315,7 @@ export default function AnimatedDecisionFlow() {
             {scenarioIdx === 2 && "Low risk → auto-approved"}
           </span>
         </div>
-        <div className="text-[11px] font-mono text-gray-400">v0.4 · amoy testnet</div>
+        <div className="text-[11px] font-mono text-gray-400">v0.4 · fuji testnet</div>
       </div>
     </div>
   );

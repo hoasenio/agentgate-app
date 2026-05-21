@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Panel, RiskBadge, StatusBadge } from "@/components/shared/DecisionUi";
-import { POLYGONSCAN, REVIEWER_ADDR } from "../../data/seed";
+import { SNOWTRACE, REVIEWER_ADDR } from "../../data/seed";
 import { actionSummary, relTime } from "../../utils/formatters";
 import { DIcon } from "../Icons";
 
@@ -16,7 +16,7 @@ export default function DetailView({ decision, onBack, onReject, onApprove }) {
     if (d.status === "auto_approved") items.push({ label: "Auto-approved", at: d.created_at, kind: "good" });
     if (d.status === "approved" && d.approvals) items.push({ label: "Approved by reviewer", at: d.approvals[0].timestamp, kind: "good", detail: d.approvals[0].approver });
     if (d.status === "rejected" && d.rejection) items.push({ label: "Rejected by reviewer", at: d.rejection.timestamp, kind: "bad", detail: d.rejection.rejected_by });
-    if (anchored) items.push({ label: "Anchored on Polygon", at: d.created_at, kind: "chain", detail: d.anchor_tx });
+    if (anchored) items.push({ label: "Anchored on Avalanche", at: d.created_at, kind: "chain", detail: d.anchor_tx });
     return items;
   }, [d, anchored]);
 
@@ -145,7 +145,7 @@ export default function DetailView({ decision, onBack, onReject, onApprove }) {
               title="Rejection record"
               tone="red"
               actions={d.anchor_tx && (
-                <a href={`${POLYGONSCAN}${d.anchor_tx.replace(/\.\.\./g, "deadbeef")}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700">
+                <a href={`${SNOWTRACE}${d.anchor_tx.replace(/\.\.\./g, "deadbeef")}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700">
                   On-chain rejection {DIcon.ext("w-3.5 h-3.5")}
                 </a>
               )}
@@ -173,12 +173,12 @@ export default function DetailView({ decision, onBack, onReject, onApprove }) {
               <div>
                 <div className="font-mono text-xs text-gray-900 break-all">{d.anchor_tx}</div>
                 <a
-                  href={`${POLYGONSCAN}${d.anchor_tx.replace(/\.\.\./g, "deadbeef")}`}
+                  href={`${SNOWTRACE}${d.anchor_tx.replace(/\.\.\./g, "deadbeef")}`}
                   target="_blank"
                   rel="noreferrer"
                   className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700"
                 >
-                  View on PolygonScan {DIcon.ext("w-3.5 h-3.5")}
+                  View on Snowtrace {DIcon.ext("w-3.5 h-3.5")}
                 </a>
               </div>
             ) : (

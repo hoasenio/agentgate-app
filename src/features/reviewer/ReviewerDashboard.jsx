@@ -15,6 +15,7 @@ import {
   listDecisions,
   rejectDecision,
 } from "@/services/api/decisions";
+import { getMe } from "@/services/api/me";
 
 const ORG_ID = process.env.NEXT_PUBLIC_ORG_ID ?? "demo-dao";
 
@@ -25,6 +26,19 @@ export default function ReviewerDashboard() {
   const [rejectingId, setRejectingId] = useState(null);
   const [toast, setToast] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [reviewerAddr, setReviewerAddr] = useState(REVIEWER_ADDR);
+
+  useEffect(() => {
+    let active = true;
+    getMe()
+      .then((d) => {
+        if (active && d?.reviewer_address) setReviewerAddr(d.reviewer_address);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const selected = useMemo(() => decisions.find((d) => d.id === selectedId), [decisions, selectedId]);
   const rejecting = useMemo(() => decisions.find((d) => d.id === rejectingId), [decisions, rejectingId]);
@@ -76,9 +90,9 @@ export default function ReviewerDashboard() {
 
   async function handleApprove(id) {
     try {
-      const updated = await approveDecision(id, REVIEWER_ADDR);
+      const updated = await approveDecision(id, reviewerAddr);
       setDecisions((all) => all.map((d) => (d.id === id ? updated : d)));
-      showToast("Approved · anchor tx submitted to Polygon", "good");
+      showToast("Approved · anchor tx submitted to Avalanche", "good");
     } catch (error) {
       console.error("Approve failed", error);
       showToast(error.message ?? "Approve failed", "bad");
@@ -89,7 +103,7 @@ export default function ReviewerDashboard() {
   async function handleConfirmReject(reason) {
     const id = rejectingId;
     try {
-      const updated = await rejectDecision(id, reason, REVIEWER_ADDR);
+      const updated = await rejectDecision(id, reason, reviewerAddr);
       setDecisions((all) => all.map((d) => (d.id === id ? updated : d)));
       setRejectingId(null);
       showToast("Rejection recorded · reason anchored on-chain", "bad");

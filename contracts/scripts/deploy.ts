@@ -11,7 +11,7 @@ async function main() {
 
   console.log("AuditLogger deployed to:", address);
   console.log(
-    `Basescan: https://sepolia.basescan.org/address/${address}`
+    `Snowtrace: https://testnet.snowtrace.io/address/${address}`
   );
   console.log(`\nAdd to .env.local:\nAUDIT_LOGGER_ADDRESS=${address}\n`);
 

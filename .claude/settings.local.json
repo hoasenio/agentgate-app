@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm uninstall *)",
+      "Bash(npx tailwindcss *)",
+      "Bash(rm -f tailwind.config.js postcss.config.js)",
+      "Bash(npm install *)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(npm run *)",
+      "Read(//private/tmp/**)",
+      "Bash(curl -sI http://localhost:3333/)",
+      "Bash(curl -sI http://localhost:3333/agent)",
+      "Bash(curl -s http://localhost:3333/api/v1/me)",
+      "Bash(python3 -m json.tool)"
+    ]
+  }
+}

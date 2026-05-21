@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { scoreRisk, shouldAutoApprove } from "@/lib/risk-engine";
 import { computeProposalHash } from "@/lib/hash";
@@ -64,9 +65,11 @@ export async function POST(req: NextRequest) {
       data: {
         orgId: input.org_id,
         agentId: input.agent_id,
-        action: input.action,
+        action: input.action as object,
         rationaleSummary: input.rationale_summary,
-        reasoningRef: input.reasoning_ref ?? null,
+        reasoningRef: input.reasoning_ref
+          ? (input.reasoning_ref as object)
+          : Prisma.JsonNull,
         riskLevel: risk.level,
         riskScore: risk.score,
         rulesHit: risk.rules_hit,
@@ -74,8 +77,8 @@ export async function POST(req: NextRequest) {
         approvals: [],
         proposalHash,
         executionGrant: grant
-          ? { ...grant, decision_id: "placeholder" }
-          : null,
+          ? ({ ...grant, decision_id: "placeholder" } as object)
+          : Prisma.JsonNull,
       },
     });
 
@@ -90,9 +93,9 @@ export async function POST(req: NextRequest) {
       });
       await prisma.decision.update({
         where: { id: row.id },
-        data: { executionGrant: finalGrant },
+        data: { executionGrant: finalGrant as object },
       });
-      row.executionGrant = finalGrant;
+      row.executionGrant = finalGrant as never;
     }
 
     return NextResponse.json(toApiDecision(row), { status: 201 });

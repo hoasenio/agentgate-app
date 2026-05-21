@@ -93,6 +93,6 @@ export const SEED = [
 ];
 
 export const REVIEWER_ADDR = "0x1a2b...3c4d";
-export const POLYGONSCAN = "https://amoy.polygonscan.com/tx/";
+export const SNOWTRACE = "https://testnet.snowtrace.io/tx/";
 
 /* ---------- Helpers ---------- */

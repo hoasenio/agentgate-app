@@ -31,6 +31,9 @@ export default function LandingPage() {
             <a href="#" className="hover:text-gray-900 inline-flex items-center gap-1.5">{Icon.github("w-4 h-4")} GitHub</a>
           </nav>
           <div className="flex items-center gap-2">
+            <Link href="/agent" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 px-3 py-1.5">
+              Agent chat {Icon.arrowRight("w-4 h-4")}
+            </Link>
             <Link href="/dashboard" className="hidden sm:inline-flex items-center gap-1.5 text-sm font-medium text-gray-700 hover:text-gray-900 px-3 py-1.5">
               Demo dashboard {Icon.arrowRight("w-4 h-4")}
             </Link>
@@ -49,7 +52,7 @@ export default function LandingPage() {
                 <span className="absolute inset-0 rounded-full bg-blue-600 ag-pulse-dot text-blue-300" />
                 <span className="relative w-1.5 h-1.5 rounded-full bg-blue-600" />
               </span>
-              Live on Polygon Amoy · open beta
+              Live on Avalanche Fuji · open beta
             </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.05]">
               Your AI agent acts.
@@ -60,16 +63,16 @@ export default function LandingPage() {
               The authorization boundary between AI reasoning and on-chain execution — with cryptographic proof of every decision.
             </p>
             <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-              <Link href="/dashboard" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg px-5 py-3 shadow-sm transition-colors">
-                Try the Demo {Icon.arrowRight("w-4 h-4")}
+              <Link href="/agent" className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg px-5 py-3 shadow-sm transition-colors">
+                Chat with the Agent {Icon.arrowRight("w-4 h-4")}
               </Link>
-              <a href="#docs" className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 rounded-lg px-5 py-3 border border-gray-200 hover:border-gray-300 bg-white">
-                Read the Docs
-              </a>
+              <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm font-semibold text-gray-700 hover:text-gray-900 rounded-lg px-5 py-3 border border-gray-200 hover:border-gray-300 bg-white">
+                Open Reviewer Dashboard
+              </Link>
             </div>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-gray-500">
               <span className="inline-flex items-center gap-1.5">{Icon.lock("w-4 h-4")} EIP-712 signed</span>
-              <span className="inline-flex items-center gap-1.5">{Icon.chain("w-4 h-4")} Anchored on Polygon</span>
+              <span className="inline-flex items-center gap-1.5">{Icon.chain("w-4 h-4")} Anchored on Avalanche</span>
               <span className="inline-flex items-center gap-1.5">{Icon.eye("w-4 h-4")} Private by default</span>
             </div>
           </div>
@@ -141,7 +144,7 @@ export default function LandingPage() {
               n="3"
               kicker="anchor"
               title="Reviewer signs, chain records"
-              body="A reviewer approves or rejects with a written reason. The decision hash is anchored on Polygon, and an execution grant is issued to the agent."
+              body="A reviewer approves or rejects with a written reason. The decision hash is anchored on Avalanche, and an execution grant is issued to the agent."
             />
           </div>
         </div>
@@ -248,7 +251,7 @@ export default function LandingPage() {
           {[
             { n: "45", label: "decisions governed", sub: "across 3 demo orgs" },
             { n: "3", label: "hallucinations caught", sub: "rejected by human reviewers" },
-            { n: "100%", label: "audit coverage", sub: "anchored on Polygon Amoy" },
+            { n: "100%", label: "audit coverage", sub: "anchored on Avalanche Fuji" },
           ].map((s) => (
             <div key={s.label}>
               <div className="text-4xl sm:text-5xl font-extrabold tracking-tight text-gray-900">{s.n}</div>

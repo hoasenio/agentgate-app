@@ -1,6 +1,6 @@
 import { API_BASE_URL } from "@/constants";
 
-async function parseResponse(response) {
+async function parseResponse(response: Response) {
   if (response.ok) return response.json();
 
   let message = "Request failed";
@@ -13,13 +13,13 @@ async function parseResponse(response) {
   throw new Error(message);
 }
 
-export async function listDecisions(orgId) {
+export async function listDecisions(orgId: string) {
   const url = `${API_BASE_URL}/orgs/${encodeURIComponent(orgId)}/decisions`;
   const response = await fetch(url, { cache: "no-store" });
   return parseResponse(response);
 }
 
-export async function approveDecision(id, approver) {
+export async function approveDecision(id: string, approver: string) {
   const url = `${API_BASE_URL}/decisions/${encodeURIComponent(id)}/approve`;
   const response = await fetch(url, {
     method: "POST",
@@ -29,7 +29,7 @@ export async function approveDecision(id, approver) {
   return parseResponse(response);
 }
 
-export async function rejectDecision(id, reason, rejector) {
+export async function rejectDecision(id: string, reason: string, rejector: string) {
   const url = `${API_BASE_URL}/decisions/${encodeURIComponent(id)}/reject`;
   const response = await fetch(url, {
     method: "POST",

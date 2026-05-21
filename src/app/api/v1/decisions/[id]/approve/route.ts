@@ -3,7 +3,10 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { issueGrant } from "@/lib/execution-grant";
 import { anchorDecision } from "@/lib/anchor";
+import { getReviewerAddress } from "@/lib/wallet";
 import { toApiDecision, err } from "@/lib/api-helpers";
+
+const ADDRESS_REGEX = /^0x[0-9a-fA-F]{40}$/;
 
 const ApproveSchema = z.object({
   approver: z.string().min(1).default("reviewer"),
@@ -30,11 +33,18 @@ export async function POST(
     const { approver } = parsed.data;
     const now = new Date();
 
+    // The on-chain `approver` argument MUST be a valid 0x-address. Fall back to the
+    // server-derived reviewer wallet address if the FE sent a label (e.g. "treasury-lead").
+    const serverAddr = getReviewerAddress();
+    const onChainApprover = ADDRESS_REGEX.test(approver)
+      ? (approver as `0x${string}`)
+      : (serverAddr ?? "0x0000000000000000000000000000000000000000");
+
     // Anchor on-chain (graceful degrade)
     const anchorTx = await anchorDecision({
       proposal_hash: row.proposalHash,
       status: "approved",
-      approver,
+      approver: onChainApprover,
       decision_id: row.id,
     });
 
@@ -51,7 +61,7 @@ export async function POST(
         status: "approved",
         approvals: [{ approver, timestamp: now.toISOString() }],
         anchorTx,
-        executionGrant: grant,
+        executionGrant: grant as object,
       },
     });
 

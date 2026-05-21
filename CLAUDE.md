@@ -18,7 +18,7 @@ npx prisma studio        # Browse/edit data in browser
 # Smart contract (run from repo root, proxied into contracts/)
 npm run contracts:compile          # hardhat compile
 npm run contracts:test             # hardhat test (local hardhat network)
-npm run contracts:deploy:base      # deploy AuditLogger to Base Sepolia
+npm run contracts:deploy:fuji      # deploy AuditLogger to Avalanche Fuji
 # Or run directly inside contracts/ with: npx hardhat <cmd>
 ```
 
@@ -29,7 +29,7 @@ npm run contracts:deploy:base      # deploy AuditLogger to Base Sepolia
 ## Architecture
 
 ### What AgentGate does
-Governance middleware: an AI agent calls `POST /api/v1/decisions/propose` *before* executing a sensitive action. The risk engine scores it. LOW risk → auto-approved immediately. HIGH/MEDIUM → held as `pending_approval` until a human reviewer approves or rejects via the dashboard. On approval, a hash of the decision is anchored on Base Sepolia and a signed JWT execution grant is returned to the agent.
+Governance middleware: an AI agent calls `POST /api/v1/decisions/propose` *before* executing a sensitive action. The risk engine scores it. LOW risk → auto-approved immediately. HIGH/MEDIUM → held as `pending_approval` until a human reviewer approves or rejects via the dashboard. On approval, a hash of the decision is anchored on Avalanche Fuji and a signed JWT execution grant is returned to the agent.
 
 ### Request flow
 ```
@@ -37,7 +37,7 @@ Agent → POST /propose → risk-engine → [auto_approved] or [pending_approval
                                             ↓ (human review)
                                      POST /approve or /reject
                                             ↓
-                                     anchor.ts → AuditLogger.sol (Base Sepolia)
+                                     anchor.ts → AuditLogger.sol (Avalanche Fuji)
                                             ↓
                                      execution_grant (JWT, 1h TTL)
 ```
@@ -62,7 +62,7 @@ Single `decisions` table (see `prisma/schema.prisma`). JSON columns (`action`, `
 `AuditLogger.sol` is event-only — no storage writes. One function: `recordDecision(bytes32 proposalHash, bytes32 status, address approver, bytes32 decisionId)` emits `DecisionRecorded`. Gas cost is minimal. The contracts workspace is a standalone npm package under `contracts/` with its own `package.json`, `tsconfig.json`, and `hardhat.config.ts`. It does **not** share node_modules with the root app.
 
 ### Frontend (to be built)
-Pages go in `src/app/` (Next.js App Router). Shared types are in `src/lib/types.ts`. The API base URL is exported from `src/constants/index.ts` as `API_BASE_URL` (defaults to `/api/v1`). The Base Sepolia explorer base is `BASE_EXPLORER`. Empty barrel files exist in `src/components/`, `src/hooks/`, `src/contexts/`, `src/store/`, `src/utils/` — fill them as the UI grows.
+Pages go in `src/app/` (Next.js App Router). Shared types are in `src/lib/types.ts`. The API base URL is exported from `src/constants/index.ts` as `API_BASE_URL` (defaults to `/api/v1`). The Avalanche Fuji explorer base is `BASE_EXPLORER`. Empty barrel files exist in `src/components/`, `src/hooks/`, `src/contexts/`, `src/store/`, `src/utils/` — fill them as the UI grows.
 
 ## Environment variables
 
@@ -70,9 +70,9 @@ Pages go in `src/app/` (Next.js App Router). Shared types are in `src/lib/types.
 |---|---|---|
 | `DATABASE_URL` | Prisma (runtime + CLI) | Remote Postgres; in `.env.local` (Next) and `.env` (Prisma CLI) |
 | `AGENTGATE_JWT_SECRET` | `execution-grant.ts` | Signs execution grant JWTs |
-| `RPC_URL` | `anchor.ts`, `hardhat.config.ts` | Base Sepolia RPC endpoint |
-| `DEPLOYER_PRIVATE_KEY` | `anchor.ts`, `hardhat.config.ts` | Funded Base Sepolia wallet |
-| `AUDIT_LOGGER_ADDRESS` | `anchor.ts` | Set after `npm run contracts:deploy:base` |
+| `RPC_URL` | `anchor.ts`, `hardhat.config.ts` | Avalanche Fuji RPC endpoint |
+| `DEPLOYER_PRIVATE_KEY` | `anchor.ts`, `hardhat.config.ts` | Funded Avalanche Fuji wallet |
+| `AUDIT_LOGGER_ADDRESS` | `anchor.ts` | Set after `npm run contracts:deploy:fuji` |
 | `NEXT_PUBLIC_BASE_EXPLORER` | Frontend | Block explorer base URL |
 
 If `RPC_URL`, `DEPLOYER_PRIVATE_KEY`, or `AUDIT_LOGGER_ADDRESS` are missing/placeholder, `anchor.ts` skips the on-chain write and returns `null` — the API continues normally with `anchor_tx: null`.

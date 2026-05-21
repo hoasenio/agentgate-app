@@ -1,5 +1,5 @@
 import { Fragment, useState } from "react";
-import { POLYGONSCAN } from "../../data/seed";
+import { SNOWTRACE } from "../../data/seed";
 import { actionSummary, relTime } from "../../utils/formatters";
 import { DIcon } from "../Icons";
 
@@ -59,13 +59,13 @@ export default function OverrideLogView({ decisions, onView }) {
                       <td className="px-5 py-3.5 text-gray-500 text-[13px] whitespace-nowrap">{relTime(d.rejection.timestamp)}</td>
                       <td className="px-5 py-3.5 text-right">
                         <a
-                          href={`${POLYGONSCAN}${(d.anchor_tx || "").replace(/\.\.\./g, "deadbeef")}`}
+                          href={`${SNOWTRACE}${(d.anchor_tx || "").replace(/\.\.\./g, "deadbeef")}`}
                           target="_blank"
                           rel="noreferrer"
                           onClick={(e) => e.stopPropagation()}
                           className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700"
                         >
-                          PolygonScan {DIcon.ext("w-3.5 h-3.5")}
+                          Snowtrace {DIcon.ext("w-3.5 h-3.5")}
                         </a>
                       </td>
                     </tr>

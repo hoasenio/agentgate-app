@@ -3,7 +3,10 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { computeReasonHash } from "@/lib/hash";
 import { anchorDecision } from "@/lib/anchor";
+import { getReviewerAddress } from "@/lib/wallet";
 import { toApiDecision, err } from "@/lib/api-helpers";
+
+const ADDRESS_REGEX = /^0x[0-9a-fA-F]{40}$/;
 
 const RejectSchema = z.object({
   reason: z.string().min(1, "Reason is required").max(500),
@@ -32,11 +35,16 @@ export async function POST(
     const now = new Date();
     const reasonHash = computeReasonHash(reason);
 
+    const serverAddr = getReviewerAddress();
+    const onChainRejector = ADDRESS_REGEX.test(rejector)
+      ? (rejector as `0x${string}`)
+      : (serverAddr ?? "0x0000000000000000000000000000000000000000");
+
     // Anchor rejection on-chain (graceful degrade)
     const rejectionAnchorTx = await anchorDecision({
       proposal_hash: row.proposalHash,
       status: "rejected",
-      approver: rejector,
+      approver: onChainRejector,
       decision_id: row.id,
     });
 

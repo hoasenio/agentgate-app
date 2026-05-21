@@ -47,7 +47,7 @@ export default function Sidebar({ view, setView, counts }) {
         <div className="rounded-lg bg-white border border-gray-200 p-3">
           <div className="flex items-center gap-2 text-xs text-gray-600">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-            Polygon Amoy · live
+            Avalanche Fuji · live
           </div>
           <div className="mt-1 text-[11px] font-mono text-gray-400 truncate">block 9,124,883</div>
         </div>

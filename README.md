@@ -1,7 +1,7 @@
 # AgentGate
 
 Privacy-preserving AI governance layer and accountability middleware for autonomous agents.  
-**Stack:** Next.js 15 · React 19 · TypeScript · Prisma · Postgres · viem · Base Sepolia
+**Stack:** Next.js 15 · React 19 · TypeScript · Prisma · Postgres · viem · Avalanche Fuji
 
 ---
 
@@ -19,9 +19,9 @@ Fill in `.env.local`:
 |---|---|---|
 | `DATABASE_URL` | ✅ | Postgres connection string |
 | `AGENTGATE_JWT_SECRET` | ✅ | 32+ char random string for JWT signing |
-| `BASE_RPC_URL` | For anchor | Base Sepolia RPC (public: `https://rpc-amoy.polygon.technology`) |
-| `DEPLOYER_PRIVATE_KEY` | For anchor | Funded Amoy test wallet private key |
-| `AUDIT_LOGGER_ADDRESS` | After deploy | Set after `npm run contracts:deploy:base` |
+| `RPC_URL` | For anchor | Avalanche Fuji RPC (public: `https://api.avax-test.network/ext/bc/C/rpc`) |
+| `DEPLOYER_PRIVATE_KEY` | For anchor | Funded Fuji test wallet private key |
+| `AUDIT_LOGGER_ADDRESS` | After deploy | Set after `npm run contracts:deploy:fuji` |
 
 ### 2. Database
 
@@ -38,7 +38,7 @@ npm run dev                  # Next.js on http://localhost:3000
 
 ---
 
-## Smart Contract (Base Sepolia)
+## Smart Contract (Avalanche Fuji)
 
 ### Install + compile
 
@@ -53,13 +53,13 @@ npm run contracts:compile
 cd contracts && npm test
 ```
 
-### Deploy to Amoy
+### Deploy to Fuji
 
-Get testnet MATIC: [https://faucet.polygon.technology](https://faucet.polygon.technology) → select Amoy, ~0.5 MATIC is enough.
+Get testnet AVAX: [https://faucet.avax.network](https://faucet.avax.network) → select Fuji (C-Chain), ~0.5 AVAX is enough.
 
 ```bash
-DEPLOYER_PRIVATE_KEY=0x... BASE_RPC_URL=https://rpc-amoy.polygon.technology \
-  npm run contracts:deploy:base
+DEPLOYER_PRIVATE_KEY=0x... RPC_URL=https://api.avax-test.network/ext/bc/C/rpc \
+  npm run contracts:deploy:fuji
 ```
 
 Copy the printed address into `.env.local` as `AUDIT_LOGGER_ADDRESS`.
@@ -99,7 +99,7 @@ Full decision detail including `execution_grant` once approved.
 
 ### `POST /decisions/:id/approve`
 
-Reviewer approves a `pending_approval` decision. Anchors hash on Base Sepolia, issues JWT execution grant.
+Reviewer approves a `pending_approval` decision. Anchors hash on Avalanche Fuji, issues JWT execution grant.
 
 ```json
 { "approver": "0xReviewerAddress" }
@@ -198,7 +198,7 @@ agentgate-app/
 │   │   ├── types.ts         # Shared TS types (Decision, etc.)
 │   │   ├── risk-engine.ts   # R1/R2/R3 scoring rules
 │   │   ├── hash.ts          # keccak256 canonical hash
-│   │   ├── anchor.ts        # viem → Base Sepolia AuditLogger
+│   │   ├── anchor.ts        # viem → Avalanche Fuji AuditLogger
 │   │   ├── execution-grant.ts  # HS256 JWT issuance
 │   │   └── canned-payloads.ts  # Demo fallback payloads
 │   └── constants/index.ts

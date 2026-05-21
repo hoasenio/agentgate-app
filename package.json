@@ -16,11 +16,13 @@
     "contracts:install": "npm --prefix contracts install",
     "contracts:compile": "npm --prefix contracts run compile",
     "contracts:test": "npm --prefix contracts test",
-    "contracts:deploy:base": "npm --prefix contracts run deploy:base"
+    "contracts:deploy:fuji": "npm --prefix contracts run deploy:fuji"
   },
   "dependencies": {
+    "@openrouter/sdk": "^0.12.35",
     "@prisma/client": "^5.22.0",
     "jose": "^5.9.6",
+    "langsmith": "^0.7.1",
     "next": "^15.0.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -32,10 +34,8 @@
     "@types/node": "^22.15.3",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "autoprefixer": "^10.5.0",
     "eslint": "^9.25.0",
     "eslint-config-next": "^15.0.3",
-    "postcss": "^8.5.15",
     "prisma": "^5.22.0",
     "tailwindcss": "^4.3.0",
     "tsx": "^4.19.2",

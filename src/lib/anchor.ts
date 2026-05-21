@@ -1,7 +1,8 @@
 import { createWalletClient, createPublicClient, http, parseAbi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { baseSepolia } from "viem/chains";
+import { avalancheFuji } from "viem/chains";
 import { toBytes32 } from "./hash";
+import { getReviewerPrivateKey } from "./wallet";
 
 const AUDIT_LOGGER_ABI = parseAbi([
   "function recordDecision(bytes32 proposalHash, bytes32 status, address approver, bytes32 decisionId) external",
@@ -10,23 +11,23 @@ const AUDIT_LOGGER_ABI = parseAbi([
 
 function getClients() {
   const rpcUrl = process.env.RPC_URL;
-  const privateKey = process.env.DEPLOYER_PRIVATE_KEY;
+  const privateKey = getReviewerPrivateKey();
 
-  if (!rpcUrl || !privateKey || privateKey.includes("your_funded")) {
+  if (!rpcUrl || !privateKey) {
     return null;
   }
 
-  const account = privateKeyToAccount(privateKey as `0x${string}`);
+  const account = privateKeyToAccount(privateKey);
   const transport = http(rpcUrl);
 
   const walletClient = createWalletClient({
     account,
-    chain: baseSepolia,
+    chain: avalancheFuji,
     transport,
   });
 
   const publicClient = createPublicClient({
-    chain: baseSepolia,
+    chain: avalancheFuji,
     transport,
   });
 
@@ -43,7 +44,7 @@ export async function anchorDecision(params: {
   const clients = getClients();
 
   if (!clients || !contractAddress) {
-    console.warn("[anchor] Skipping — RPC_URL, DEPLOYER_PRIVATE_KEY, or AUDIT_LOGGER_ADDRESS not configured");
+    console.warn("[anchor] Skipping — RPC_URL, wallet key, or AUDIT_LOGGER_ADDRESS not configured");
     return null;
   }
 
