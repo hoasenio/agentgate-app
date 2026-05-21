@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import AnimatedDecisionFlow from "./components/AnimatedDecisionFlow";
 import { Icon } from "./components/IconSet";
 import { Cmp, ProblemCard, StepCard } from "./components/SectionCards";
-import agentGateLogo from "@/assets/AgentGate-logo.png";
+import agentGateLogo from "@/assets/agentgate-logo.svg";
 
 export default function LandingPage() {
   const [navScrolled, setNavScrolled] = useState(false);

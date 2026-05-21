@@ -7,7 +7,7 @@ import { RiskBadge, StatusBadge } from "@/components/shared/DecisionUi";
 import { sendAgentChat, getDecision } from "@/services/api/agent";
 import { getMe } from "@/services/api/me";
 import { getAnchorReceipt } from "@/services/api/chain";
-import agentGateLogo from "@/assets/AgentGate-logo.png";
+import agentGateLogo from "@/assets/agentgate-logo.svg";
 
 function shortAddr(addr) {
   if (!addr || addr.length < 10) return null;

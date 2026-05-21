@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Manrope } from "next/font/google";
 import type { ReactNode } from "react";
-import agentGateLogo from "@/assets/AgentGate-logo.png";
+import agentGateLogo from "@/assets/agentgate-logo.svg";
 import openGraphImage from "@/assets/opengraph.png";
 import "./globals.css";
 
@@ -23,9 +23,9 @@ export const metadata: Metadata = {
   description:
     "Privacy-preserving AI governance layer for autonomous agents.",
   icons: {
-    icon: [{ url: agentGateLogo.src, type: "image/png" }],
-    shortcut: [{ url: agentGateLogo.src, type: "image/png" }],
-    apple: [{ url: agentGateLogo.src, type: "image/png" }],
+    icon: [{ url: agentGateLogo.src, type: "image/svg+xml" }],
+    shortcut: [{ url: agentGateLogo.src, type: "image/svg+xml" }],
+    apple: [{ url: agentGateLogo.src, type: "image/svg+xml" }],
   },
   openGraph: {
     title: "AgentGate",

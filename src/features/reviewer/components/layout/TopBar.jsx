@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useEffect, useState } from "react";
 import { DIcon } from "../Icons";
 import { getMe } from "@/services/api/me";
-import agentGateLogo from "@/assets/AgentGate-logo.png";
+import agentGateLogo from "@/assets/agentgate-logo.svg";
 
 function shortAddr(addr) {
   if (!addr || addr.length < 10) return addr ?? "0x…";
