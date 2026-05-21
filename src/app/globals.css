@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+/* Default font-stack fallbacks at :root so var(--font-*) ALWAYS resolves,
+   even if next/font fails to load the Google fonts (network/blocker/etc).
+   next/font's classNames override these at <body> for normal rendering. */
+:root {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
 html,
 body,
 #root {
@@ -7,7 +15,7 @@ body,
 }
 
 body {
-  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   color: #111827;
   background: #ffffff;
@@ -16,7 +24,7 @@ body {
 .font-mono,
 code,
 pre {
-  font-family: var(--font-mono), ui-monospace, SFMono-Regular, monospace;
+  font-family: var(--font-mono) !important;
 }
 
 .ag-pulse-dot::before {
