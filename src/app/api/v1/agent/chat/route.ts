@@ -11,6 +11,7 @@ const ChatSchema = z.object({
   prompt: z.string().min(1).max(2000),
   agent_id: z.string().min(1).default("agent-treasury-01"),
   org_id: z.string().min(1).default("demo-dao"),
+  session_id: z.string().optional().nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -21,12 +22,17 @@ export async function POST(req: NextRequest) {
       return err(parsed.error.issues[0]?.message ?? "Invalid input", 400);
     }
 
-    const { prompt, agent_id, org_id } = parsed.data;
+    const { prompt, agent_id, org_id, session_id } = parsed.data;
 
     // 1. Ask the LLM (via OpenRouter) for a structured proposal — traced through LangSmith
     let llmResult;
     try {
-      llmResult = await generateProposal({ prompt, agent_id, org_id });
+      llmResult = await generateProposal({
+        prompt,
+        agent_id,
+        org_id,
+        session_id: session_id ?? null,
+      });
     } catch (e) {
       console.error("[agent/chat] LLM failure:", e);
       return err(
@@ -35,8 +41,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 1a. If the agent refused (out-of-scope prompt), return without creating a decision.
-    //     This is a feature, not a failure — surfaces the agent's policy boundary.
+    // 1a. Refusal path — surface the agent's policy boundary, no decision row.
     if (llmResult.kind === "refusal") {
       return NextResponse.json(
         {
@@ -44,15 +49,25 @@ export async function POST(req: NextRequest) {
           decision: null,
           agent_message: llmResult.refusal_message,
           langsmith_share_url: llmResult.langsmith_share_url,
+          langsmith_run_id: llmResult.langsmith_run_id,
           model: llmResult.model,
+          trace: llmResult.trace,
+          session_id: session_id ?? null,
         },
         { status: 200 }
       );
     }
 
-    const { proposal, langsmith_run_id, langsmith_share_url, model } = llmResult;
+    const {
+      proposal,
+      thoughts,
+      langsmith_run_id,
+      langsmith_share_url,
+      model,
+      trace,
+    } = llmResult;
 
-    // 2. Run risk engine + persist decision (mirrors /decisions/propose pipeline)
+    // 2. Run risk engine + persist decision
     const now = new Date();
     const risk = scoreRisk(proposal.action);
     const auto = shouldAutoApprove(risk);
@@ -76,7 +91,10 @@ export async function POST(req: NextRequest) {
           run_id: langsmith_run_id,
           share_url: langsmith_share_url,
           model,
-        },
+          session_id: session_id ?? null,
+          thoughts,
+          trace,
+        } as object,
         riskLevel: risk.level,
         riskScore: risk.score,
         rulesHit: risk.rules_hit,
@@ -105,8 +123,12 @@ export async function POST(req: NextRequest) {
         refused: false,
         decision: toApiDecision(finalRow),
         agent_message: buildAgentMessage(proposal, risk.level),
+        thoughts,
         langsmith_share_url,
+        langsmith_run_id,
         model,
+        trace,
+        session_id: session_id ?? null,
       },
       { status: 201 }
     );
@@ -122,5 +144,5 @@ function buildAgentMessage(
 ): string {
   const usd = proposal.action.params.estimated_usd;
   const usdStr = typeof usd === "number" ? `$${usd.toLocaleString()}` : "unknown notional";
-  return `I've drafted a **${proposal.action.type}** proposal (${usdStr}, risk: **${riskLevel.toUpperCase()}**). ${proposal.rationale_summary} Submitting to AgentGate now.`;
+  return `**${proposal.action.type}** · ${usdStr} · ${riskLevel.toUpperCase()} risk\n\n${proposal.rationale_summary}`;
 }

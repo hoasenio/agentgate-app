@@ -16,6 +16,7 @@ export async function sendAgentChat(input: {
   prompt: string;
   agent_id?: string;
   org_id?: string;
+  session_id?: string | null;
 }) {
   const response = await fetch(`${API_BASE_URL}/agent/chat`, {
     method: "POST",
