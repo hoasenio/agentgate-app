@@ -11,7 +11,9 @@
       "Bash(curl -sI http://localhost:3333/)",
       "Bash(curl -sI http://localhost:3333/agent)",
       "Bash(curl -s http://localhost:3333/api/v1/me)",
-      "Bash(python3 -m json.tool)"
+      "Bash(python3 -m json.tool)",
+      "Bash(wait)",
+      "Bash(kill 49938 49942 53185 53188)"
     ]
   }
 }
