@@ -18,7 +18,7 @@ const QUICK_PROMPTS = [
   {
     label: "HIGH · Large rebalance",
     text:
-      "Rebalance 8% of our ETH treasury into USDC. Recent on-chain whale outflow data suggests a 5-10% correction is likely in the next 14 days.",
+      "Swap ~$240k of ETH into USDC (about 8% of our $2M ETH allocation). Recent on-chain whale outflow data suggests a 5-10% ETH correction is likely in the next 14 days, so I want to de-risk into stables.",
   },
   {
     label: "MEDIUM · Governance vote",
@@ -27,12 +27,12 @@ const QUICK_PROMPTS = [
   },
   {
     label: "LOW · Claim rewards",
-    text: "Claim our daily Lido staking rewards.",
+    text: "Claim our daily Lido staking rewards (~$200).",
   },
   {
     label: "LOW · Micro-rebalance",
     text:
-      "Auto-correct the ETH/USDC drift back to 60/40 — we're 0.4% off target.",
+      "Auto-correct the ETH/USDC drift back to our 60/40 target — we're 0.4% off, roughly $4-5k worth.",
   },
 ];
 
@@ -57,8 +57,12 @@ export default function AgentChatPage() {
   const [activeDecision, setActiveDecision] = useState(null);
   const [shareUrl, setShareUrl] = useState(null);
   const [model, setModel] = useState(null);
+  const [lastTrace, setLastTrace] = useState(null); // { latency_ms, tokens_in, tokens_out, tokens_total, run_id }
   const [agentAddr, setAgentAddr] = useState(null);
   const [reviewerAddr, setReviewerAddr] = useState(null);
+  const [sessionId] = useState(
+    () => `sess_${Math.random().toString(36).slice(2, 10)}${Date.now().toString(36).slice(-4)}`
+  );
   const logRef = useRef(null);
 
   useEffect(() => {
@@ -68,11 +72,13 @@ export default function AgentChatPage() {
         if (!active) return;
         if (d?.agent_address) setAgentAddr(d.agent_address);
         if (d?.reviewer_address) setReviewerAddr(d.reviewer_address);
+        if (d?.default_model && !model) setModel(d.default_model);
       })
       .catch(() => {});
     return () => {
       active = false;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -158,28 +164,41 @@ export default function AgentChatPage() {
         prompt: text,
         agent_id: AGENT_ID,
         org_id: ORG_ID,
+        session_id: sessionId,
       });
       // Remove the thinking placeholder
       setMessages((m) => m.filter((x) => x.kind !== "thinking"));
+
+      // Persist trace metadata for the right-panel inspector
+      setShareUrl(result.langsmith_share_url);
+      setModel(result.model);
+      if (result.trace) {
+        setLastTrace({
+          ...result.trace,
+          run_id: result.langsmith_run_id,
+          share_url: result.langsmith_share_url,
+        });
+      }
 
       if (result.refused) {
         setMessages((m) => [
           ...m,
           { role: "agent", kind: "refusal", content: result.agent_message },
         ]);
-        setShareUrl(result.langsmith_share_url);
-        setModel(result.model);
         return;
       }
 
       setMessages((m) => [
         ...m,
-        { role: "agent", kind: "text", content: result.agent_message },
+        {
+          role: "agent",
+          kind: "proposal",
+          content: result.agent_message,
+          thoughts: result.thoughts,
+        },
       ]);
       setActiveDecisionId(result.decision.id);
       setActiveDecision(result.decision);
-      setShareUrl(result.langsmith_share_url);
-      setModel(result.model);
     } catch (e) {
       setMessages((m) => m.filter((x) => x.kind !== "thinking"));
       setError(e.message ?? "Agent failed");
@@ -212,10 +231,19 @@ export default function AgentChatPage() {
           </Link>
           <div className="flex items-center gap-3">
             {agentAddr && (
-              <span className="hidden sm:inline-flex items-center gap-1.5 text-xs bg-white border border-gray-200 rounded-lg px-2.5 py-1">
+              <span className="hidden sm:inline-flex items-center gap-1.5 bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs leading-none">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 <span className="text-gray-500">Agent</span>
-                <span className="font-mono text-gray-800">{shortAddr(agentAddr)}</span>
+                <span
+                  className="text-gray-800"
+                  style={{
+                    fontFamily:
+                      'ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  {shortAddr(agentAddr)}
+                </span>
               </span>
             )}
             <Link href="/dashboard" className="text-sm font-medium text-gray-700 hover:text-gray-900">
@@ -228,24 +256,30 @@ export default function AgentChatPage() {
       <main className="max-w-5xl mx-auto px-6 py-8 grid lg:grid-cols-[1fr_360px] gap-6">
         {/* CHAT COLUMN */}
         <section className="bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col h-[calc(100vh-9rem)] min-h-[560px]">
-          <div className="px-5 py-3 border-b border-gray-100 flex items-center justify-between">
-            <div>
-              <div className="text-sm font-semibold">Treasury Operations Agent</div>
-              <div className="text-xs text-gray-500 font-mono">
+          <div className="px-5 py-3 border-b border-gray-100 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold truncate">Treasury Operations Agent</div>
+              <div className="text-xs text-gray-500 font-mono truncate">
                 {AGENT_ID} · {ORG_ID}
-                {reviewerAddr && (
-                  <>
-                    {" · reviewer "}
-                    <span className="text-gray-700">{shortAddr(reviewerAddr)}</span>
-                  </>
-                )}
               </div>
             </div>
-            {model && (
-              <div className="text-[11px] font-mono text-gray-500 bg-gray-50 border border-gray-200 rounded px-2 py-1">
-                {model}
-              </div>
-            )}
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              {model && (
+                <span
+                  className="inline-flex items-center gap-1.5 text-[11px] font-mono font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded px-2 py-0.5 whitespace-nowrap"
+                  title="LLM model in use (set OPENROUTER_MODEL to change)"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0" />
+                  {model}
+                </span>
+              )}
+              <span
+                className="text-[10px] font-mono text-gray-500 bg-gray-50 border border-gray-200 rounded px-2 py-0.5 whitespace-nowrap"
+                title={`Chat session ID: ${sessionId}${reviewerAddr ? ` · reviewer ${reviewerAddr}` : ""}`}
+              >
+                {sessionId}
+              </span>
+            </div>
           </div>
 
           <div ref={logRef} className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
@@ -299,6 +333,7 @@ export default function AgentChatPage() {
             decision={activeDecision}
             shareUrl={shareUrl}
           />
+          <TraceCard trace={lastTrace} model={model} sessionId={sessionId} />
           <AnchoredCard decision={activeDecision} />
           <InstructionsPanel />
         </aside>
@@ -345,11 +380,96 @@ function Bubble({ m }) {
       </div>
     );
   }
+  if (m.kind === "proposal") {
+    const headerLine = (m.content ?? "").split("\n\n")[0] ?? "";
+    const body = (m.content ?? "").split("\n\n").slice(1).join("\n\n");
+    const t = m.thoughts ?? {};
+    const hasThoughts =
+      (t.key_signals?.length ?? 0) +
+        (t.considerations?.length ?? 0) +
+        (t.risks_acknowledged?.length ?? 0) >
+      0;
+    return (
+      <div className="flex justify-start ag-step-in">
+        <div className="max-w-[88%] w-full bg-white border border-gray-200 rounded-2xl rounded-bl-sm px-4 py-3 text-sm leading-relaxed space-y-3 shadow-sm">
+          <div
+            className="font-semibold text-gray-900"
+            dangerouslySetInnerHTML={{
+              __html: headerLine.replace(/\*\*(.+?)\*\*/g, "<span class='text-blue-700'>$1</span>"),
+            }}
+          />
+          {body && <p className="text-gray-700 whitespace-pre-wrap">{body}</p>}
+
+          {hasThoughts && (
+            <div className="border-t border-gray-100 pt-3 space-y-3">
+              {t.key_signals?.length > 0 && (
+                <ThoughtBlock
+                  label="Key signals"
+                  emoji="📊"
+                  items={t.key_signals}
+                  tone="blue"
+                />
+              )}
+              {t.considerations?.length > 0 && (
+                <ThoughtBlock
+                  label="Considerations"
+                  emoji="⚖️"
+                  items={t.considerations}
+                  tone="gray"
+                />
+              )}
+              {t.risks_acknowledged?.length > 0 && (
+                <ThoughtBlock
+                  label="Risks acknowledged"
+                  emoji="⚠️"
+                  items={t.risks_acknowledged}
+                  tone="amber"
+                />
+              )}
+            </div>
+          )}
+
+          <div className="text-[11px] text-gray-400 font-mono pt-1">
+            Submitted to AgentGate · awaiting risk score
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="flex justify-start ag-step-in">
       <div className="max-w-[85%] bg-gray-100 text-gray-900 rounded-2xl rounded-bl-sm px-4 py-2 text-sm leading-relaxed whitespace-pre-wrap">
         {m.content}
       </div>
+    </div>
+  );
+}
+
+function ThoughtBlock({ label, emoji, items, tone }) {
+  const toneMap = {
+    blue: "bg-blue-50 border-blue-100 text-blue-900",
+    gray: "bg-gray-50 border-gray-200 text-gray-800",
+    amber: "bg-amber-50 border-amber-100 text-amber-900",
+  };
+  const accentMap = {
+    blue: "text-blue-700",
+    gray: "text-gray-600",
+    amber: "text-amber-700",
+  };
+  return (
+    <div className={`rounded-md border ${toneMap[tone]} px-3 py-2`}>
+      <div className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider mb-1 ${accentMap[tone]}`}>
+        <span>{emoji}</span>
+        <span>{label}</span>
+      </div>
+      <ul className="space-y-1 text-xs leading-relaxed">
+        {items.map((s, i) => (
+          <li key={i} className="flex gap-1.5">
+            <span className="opacity-50">·</span>
+            <span>{s}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -405,6 +525,96 @@ function DecisionStatusPanel({ decision, shareUrl }) {
           className="block text-xs text-blue-600 hover:text-blue-700 font-medium"
         >
           ↗ View AI reasoning trace (LangSmith)
+        </a>
+      )}
+    </div>
+  );
+}
+
+function TraceCard({ trace, model, sessionId }) {
+  if (!trace) {
+    return (
+      <div className="bg-white border border-gray-200 rounded-xl p-4">
+        <div className="text-xs font-mono uppercase tracking-wider text-gray-400 mb-2">
+          LangSmith Trace
+        </div>
+        <div className="text-sm text-gray-500">
+          Send a prompt to capture an AI reasoning trace.
+        </div>
+      </div>
+    );
+  }
+  const shareUrl = trace.share_url;
+  const runId = trace.run_id;
+  return (
+    <div className="bg-white border border-gray-200 rounded-xl p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-mono uppercase tracking-wider text-gray-400">
+          LangSmith Trace
+        </div>
+        <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-1.5 py-0.5">
+          ● captured
+        </span>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2 text-center">
+        <div className="bg-gray-50 rounded px-2 py-1.5 border border-gray-200">
+          <div className="text-[9px] font-mono uppercase tracking-wider text-gray-500">
+            latency
+          </div>
+          <div className="text-xs font-mono font-semibold text-gray-900">
+            {trace.latency_ms}ms
+          </div>
+        </div>
+        <div className="bg-gray-50 rounded px-2 py-1.5 border border-gray-200">
+          <div className="text-[9px] font-mono uppercase tracking-wider text-gray-500">
+            tokens in
+          </div>
+          <div className="text-xs font-mono font-semibold text-gray-900">
+            {trace.tokens_in ?? "—"}
+          </div>
+        </div>
+        <div className="bg-gray-50 rounded px-2 py-1.5 border border-gray-200">
+          <div className="text-[9px] font-mono uppercase tracking-wider text-gray-500">
+            tokens out
+          </div>
+          <div className="text-xs font-mono font-semibold text-gray-900">
+            {trace.tokens_out ?? "—"}
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-1 text-[11px] font-mono">
+        {model && (
+          <div className="flex justify-between">
+            <span className="text-gray-500">model</span>
+            <span className="text-gray-800 truncate ml-2">{model}</span>
+          </div>
+        )}
+        {runId && (
+          <div className="flex justify-between">
+            <span className="text-gray-500">run_id</span>
+            <span className="text-gray-800 truncate ml-2" title={runId}>
+              {runId.slice(0, 8)}…{runId.slice(-4)}
+            </span>
+          </div>
+        )}
+        {sessionId && (
+          <div className="flex justify-between">
+            <span className="text-gray-500">session</span>
+            <span className="text-gray-800 truncate ml-2">{sessionId}</span>
+          </div>
+        )}
+      </div>
+
+      {shareUrl && (
+        <a
+          href={shareUrl}
+          target="_blank"
+          rel="noreferrer"
+          className="block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg py-2 transition-colors"
+        >
+          Open in LangSmith ↗
         </a>
       )}
     </div>

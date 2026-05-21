@@ -64,7 +64,16 @@ export default function TopBar() {
           title={addr ?? "Wallet not configured"}
         >
           <span className={`w-2 h-2 rounded-full ${addr ? "bg-emerald-500" : "bg-amber-500"}`} />
-          <span className="font-mono text-xs text-gray-700">{shortAddr(addr)}</span>
+          <span
+            className="text-gray-700"
+            style={{
+              fontFamily:
+                'ui-monospace, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              fontSize: "0.75rem",
+            }}
+          >
+            {shortAddr(addr)}
+          </span>
           {DIcon.chev("w-4 h-4 text-gray-400")}
         </a>
       </div>
