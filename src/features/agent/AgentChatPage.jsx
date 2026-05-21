@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { RiskBadge, StatusBadge } from "@/components/shared/DecisionUi";
 import { sendAgentChat, getDecision } from "@/services/api/agent";
 import { getMe } from "@/services/api/me";
 import { getAnchorReceipt } from "@/services/api/chain";
+import agentGateLogo from "@/assets/AgentGate-logo.png";
 
 function shortAddr(addr) {
   if (!addr || addr.length < 10) return null;
@@ -198,7 +200,13 @@ export default function AgentChatPage() {
       <header className="bg-white border-b border-gray-200">
         <div className="max-w-5xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-gray-900 text-white flex items-center justify-center text-xs font-bold">A</div>
+            <Image
+              src={agentGateLogo}
+              alt="AgentGate logo"
+              width={28}
+              height={28}
+              className="w-7 h-7 rounded-md object-cover"
+            />
             <span className="font-semibold tracking-tight">AgentGate</span>
             <span className="ml-2 text-[10px] font-mono uppercase tracking-wider text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">Agent</span>
           </Link>
