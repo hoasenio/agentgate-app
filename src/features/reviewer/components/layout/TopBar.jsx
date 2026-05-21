@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import { DIcon } from "../Icons";
 import { getMe } from "@/services/api/me";
+import agentGateLogo from "@/assets/AgentGate-logo.png";
 
 function shortAddr(addr) {
   if (!addr || addr.length < 10) return addr ?? "0x…";
@@ -33,7 +35,13 @@ export default function TopBar() {
   return (
     <div className="h-14 bg-white border-b border-gray-200 flex items-center px-6 gap-4">
       <Link href="/" className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-md bg-gray-900 text-white flex items-center justify-center">{DIcon.shield("w-4 h-4")}</div>
+        <Image
+          src={agentGateLogo}
+          alt="AgentGate logo"
+          width={28}
+          height={28}
+          className="w-7 h-7 rounded-md object-cover"
+        />
         <span className="font-semibold tracking-tight">AgentGate</span>
         <span className="ml-1 text-[10px] font-mono uppercase tracking-wider text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">v0.4</span>
       </Link>

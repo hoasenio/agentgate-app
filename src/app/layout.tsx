@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { JetBrains_Mono, Manrope } from "next/font/google";
 import type { ReactNode } from "react";
+import agentGateLogo from "@/assets/AgentGate-logo.png";
 import "./globals.css";
 
 const manrope = Manrope({
@@ -13,10 +14,39 @@ const jetbrainsMono = JetBrains_Mono({
   variable: "--font-mono",
 });
 
+const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(appUrl),
   title: "AgentGate",
   description:
     "Privacy-preserving AI governance layer for autonomous agents.",
+  icons: {
+    icon: [{ url: agentGateLogo.src, type: "image/png" }],
+    shortcut: [{ url: agentGateLogo.src, type: "image/png" }],
+    apple: [{ url: agentGateLogo.src, type: "image/png" }],
+  },
+  openGraph: {
+    title: "AgentGate",
+    description:
+      "Privacy-preserving AI governance layer for autonomous agents.",
+    type: "website",
+    images: [
+      {
+        url: agentGateLogo.src,
+        width: 1024,
+        height: 1024,
+        alt: "AgentGate logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "AgentGate",
+    description:
+      "Privacy-preserving AI governance layer for autonomous agents.",
+    images: [agentGateLogo.src],
+  },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

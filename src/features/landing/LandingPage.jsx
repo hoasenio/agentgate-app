@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 import AnimatedDecisionFlow from "./components/AnimatedDecisionFlow";
 import { Icon } from "./components/IconSet";
 import { Cmp, ProblemCard, StepCard } from "./components/SectionCards";
+import agentGateLogo from "@/assets/AgentGate-logo.png";
 
 export default function LandingPage() {
   const [navScrolled, setNavScrolled] = useState(false);
@@ -20,7 +22,13 @@ export default function LandingPage() {
       <header className={`sticky top-0 z-40 transition-colors ${navScrolled ? "bg-white/85 backdrop-blur border-b border-gray-200" : "bg-transparent"}`}>
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <a href="/" className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-gray-900 text-white flex items-center justify-center">{Icon.shield("w-4 h-4")}</div>
+            <Image
+              src={agentGateLogo}
+              alt="AgentGate logo"
+              width={28}
+              height={28}
+              className="w-7 h-7 rounded-md object-cover"
+            />
             <span className="font-semibold tracking-tight">AgentGate</span>
             <span className="ml-2 text-[10px] font-mono uppercase tracking-wider text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">v0.4</span>
           </a>
@@ -286,7 +294,13 @@ export default function LandingPage() {
       <footer className="border-t border-gray-100">
         <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-10">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-md bg-gray-900 text-white flex items-center justify-center">{Icon.shield("w-4 h-4")}</div>
+            <Image
+              src={agentGateLogo}
+              alt="AgentGate logo"
+              width={28}
+              height={28}
+              className="w-7 h-7 rounded-md object-cover"
+            />
             <span className="font-semibold tracking-tight">AgentGate</span>
             <span className="text-sm text-gray-500 ml-3 hidden sm:inline">Not the agent. Not the wallet. The governance layer in between.</span>
           </div>
